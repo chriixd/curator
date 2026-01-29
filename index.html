@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curator — Photo Selection</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- START SCREEN -->
+    <div id="startScreen" class="screen active">
+        <div class="container">
+            <div class="header-block">
+                <h1 class="title">Curator</h1>
+                <p class="subtitle">A preference-based photo selector</p>
+            </div>
+            
+            <div class="explanation">
+                <p>Curator helps you discover your strongest photos through progressive comparisons, not elimination.</p>
+                <p>Upload a ZIP file containing your images, and we'll guide you through two phases:</p>
+                <ol>
+                    <li><strong>Quick screening</strong> — Keep photos that stand out</li>
+                    <li><strong>Preference mapping</strong> — Compare similar photos to refine your selection</li>
+                </ol>
+                <p class="note">Your photos stay private. Everything happens in your browser.</p>
+            </div>
+
+            <div class="selection-size-config">
+                <label for="selectionSizeInput" class="config-label">
+                    How many photos do you want to select?
+                </label>
+                <input 
+                    type="number" 
+                    id="selectionSizeInput" 
+                    class="size-input" 
+                    value="20" 
+                    min="5" 
+                    max="100"
+                    step="5"
+                >
+                <p class="config-hint">You can change this later if needed</p>
+            </div>
+
+            <div class="upload-zone">
+                <input type="file" id="zipInput" accept=".zip" hidden>
+                <button id="uploadBtn" class="btn-primary">
+                    <span class="btn-text">Select ZIP File</span>
+                    <span class="btn-icon">↑</span>
+                </button>
+                <p class="upload-hint">Or drag and drop here</p>
+            </div>
+
+            <div id="loadingState" class="loading-state hidden">
+                <div class="spinner"></div>
+                <p class="loading-text">Processing images...</p>
+                <p class="loading-count"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHASE 1: SWIPE SCREENING -->
+    <div id="swipeScreen" class="screen">
+        <div class="phase-header">
+            <div class="container">
+                <div class="phase-info">
+                    <span class="phase-label">Phase 1</span>
+                    <h2 class="phase-title">Quick Screening</h2>
+                </div>
+                <div class="phase-progress">
+                    <span class="progress-text"><span id="swipeCount">0</span> / <span id="swipeTotal">0</span></span>
+                    <span class="kept-count"><span id="keptCount">0</span> kept</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="swipe-container">
+            <div class="swipe-card" id="swipeCard">
+                <img id="swipeImage" src="" alt="Photo to review">
+            </div>
+        </div>
+
+        <div class="swipe-controls">
+            <button id="discardBtn" class="swipe-btn discard">
+                <span class="btn-label">Discard</span>
+                <span class="btn-key">←</span>
+            </button>
+            <button id="keepBtn" class="swipe-btn keep">
+                <span class="btn-label">Keep</span>
+                <span class="btn-key">→</span>
+            </button>
+        </div>
+
+        <div class="skip-phase">
+            <button id="skipPhase1Btn" class="btn-text-link">Skip to comparisons →</button>
+        </div>
+    </div>
+
+    <!-- PHASE 2: PAIRWISE COMPARISON -->
+    <div id="compareScreen" class="screen">
+        <div class="phase-header">
+            <div class="container">
+                <div class="phase-info">
+                    <span class="phase-label">Phase 2</span>
+                    <h2 class="phase-title">Preference Mapping</h2>
+                </div>
+                <div class="precision-display">
+                    <div class="precision-label">Selection precision</div>
+                    <div class="precision-value"><span id="precisionValue">0</span>%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison-stats">
+            <div class="stat">
+                <span class="stat-value" id="compareCount">0</span>
+                <span class="stat-label">comparisons</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" id="photosInPool">0</span>
+                <span class="stat-label">photos</span>
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p class="progress-label" id="progressLabel">Establishing baseline...</p>
+        </div>
+
+        <div class="compare-container">
+            <div class="compare-side" id="photoA" data-side="A">
+                <div class="compare-image-wrapper">
+                    <img class="compare-image" id="imageA" src="" alt="Photo A">
+                </div>
+                <button class="prefer-btn" data-side="A">
+                    <span class="prefer-text">Prefer this</span>
+                    <span class="prefer-key">←</span>
+                </button>
+            </div>
+
+            <div class="compare-divider">
+                <span class="versus">vs</span>
+            </div>
+
+            <div class="compare-side" id="photoB" data-side="B">
+                <div class="compare-image-wrapper">
+                    <img class="compare-image" id="imageB" src="" alt="Photo B">
+                </div>
+                <button class="prefer-btn" data-side="B">
+                    <span class="prefer-text">Prefer this</span>
+                    <span class="prefer-key">→</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="stableState" class="stable-state hidden">
+            <div class="stable-message">
+                <h3>Selection is stable</h3>
+                <p>Your preferences are clear. View your top photos or refine further.</p>
+            </div>
+            <div class="stable-actions">
+                <button id="viewResultsBtn" class="btn-primary">View Selection</button>
+                <button id="refineMoreBtn" class="btn-secondary">Refine More</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESULTS SCREEN -->
+    <div id="resultsScreen" class="screen">
+        <div class="results-header">
+            <div class="container">
+                <h2 class="results-title">Your Selection</h2>
+                <p class="results-subtitle">Top <span id="selectionSize">20</span> photos based on your preferences</p>
+            </div>
+        </div>
+
+        <div class="results-info">
+            <p>These rankings reflect your comparative preferences, not absolute quality. You can drag to reorder.</p>
+            <p class="lock-explanation">
+                <strong>🔓 Lock feature:</strong> Click the lock icon to exclude a photo from future comparisons when you click "Continue Refining". 
+                Locked photos keep their current score but won't be compared again.
+            </p>
+        </div>
+
+        <div id="resultsGrid" class="results-grid">
+            <!-- Photos will be inserted here dynamically -->
+        </div>
+
+        <div class="results-actions">
+            <button id="backToCompareBtn" class="btn-secondary">← Continue Refining</button>
+            <button id="exportBtn" class="btn-primary">Export Selection</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
